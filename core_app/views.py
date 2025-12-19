@@ -34,9 +34,9 @@ class RegisterView(APIView):
         
         # Generate Phone OTP (Code to be sent via SMS)
         code = str(random.randint(1000, 9999))
-        user, created = PhoneOTP.objects.update_or_create(phone=phone,user=user)
-        user.otp_code = code
-        user.save()
+        phoneotp_obj, created = PhoneOTP.objects.update_or_create(phone=phone,user=user)
+        phoneotp_obj.otp_code = code
+        phoneotp_obj.save()
         
         # Generate Authentication Code for app-based login
         secret_code = AuthenticationCode.generate_code()
