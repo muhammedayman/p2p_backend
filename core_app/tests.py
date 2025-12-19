@@ -9,7 +9,7 @@ class AuthTests(TestCase):
 
     def test_register_flow(self):
         # 1. Register
-        response = self.client.post('/api/register/', {
+        response = self.client.post('/register/', {
             "phone": "+918888888888",
             "name": "Test User",
             "is_photo_public": True
@@ -21,7 +21,7 @@ class AuthTests(TestCase):
         otp = response.data['otp_code']
         
         # 2. Verify Hook (Simulate SMS received)
-        verify_response = self.client.post('/api/verify-sms/', {
+        verify_response = self.client.post('/verify-sms/', {
             "sender_phone": "+918888888888",
             "message_body": otp
         }, format='json')
@@ -46,7 +46,7 @@ class AuthTests(TestCase):
             last_seen=timezone.now()
         )
         
-        response = self.client.get('/api/peers/')
+        response = self.client.get('/peers/')
         data = response.data
         
         # Alice should have photo
