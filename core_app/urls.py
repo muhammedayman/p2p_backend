@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     RegisterView, VerifySMSWebhookView, 
     EmailOTPRequestView, EmailOTPVerifyView, UserStatusView,
-    HeartbeatView, PeersListView, TURNCredentialsView
+    HeartbeatView, PeersListView, TURNCredentialsView,
+    LoginWithSecretCodeView, VerifySecretCodeView
 )
 
 urlpatterns = [
@@ -12,6 +13,8 @@ urlpatterns = [
     path('email-otp/request/', EmailOTPRequestView.as_view()),
     path('email-otp/verify/', EmailOTPVerifyView.as_view()),
     path('status/', UserStatusView.as_view()),
+    path('login-with-code/', LoginWithSecretCodeView.as_view()),  # Auto-login with secret code
+    path('verify-code/', VerifySecretCodeView.as_view()),  # Verify code validity
     
     # Signaling
     path('heartbeat/', HeartbeatView.as_view()),

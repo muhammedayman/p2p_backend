@@ -1,6 +1,8 @@
 from django.db import models
 from django.utils import timezone
 import datetime
+import secrets
+import json
 
 class ProfileUser(models.Model):
     name = models.CharField(max_length=100)
@@ -55,3 +57,29 @@ class EmailOTP(models.Model):
         db_table = "email_otps"
         verbose_name = "Email OTP"
         verbose_name_plural = "Email OTPs"
+
+
+class AuthenticationCode(models.Model):
+    """
+    Stores unique authentication codes generated during registration.
+    The app saves this code locally and can auto-login without entering details.
+    """
+    user = models.OneToOneField(ProfileUser, on_delete=models.CASCADE, related_name='auth_code')
+    secret_code = models.CharField(max_length=64, unique=True)  # Unique auth token
+    user_data = models.JSONField()  # Encrypted: {name, phone, email}
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "authentication_codes"
+        verbose_name = "Authentication Code"
+        verbose_name_plural = "Authentication Codes"
+
+    @staticmethod
+    def generate_code():
+        """Generate a unique secret code"""
+        return secrets.token_urlsafe(48)
+
+    def __str__(self):
+        return f"AuthCode for {self.user.name} ({self.user.phone})"

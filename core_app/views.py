@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.utils import timezone
-from .models import ProfileUser, PhoneOTP, EmailOTP
+from .models import ProfileUser, PhoneOTP, EmailOTP, AuthenticationCode
 from .serializers import UserRegistrationSerializer, PeerSerializer
 import random
 import datetime
@@ -15,6 +15,7 @@ class RegisterView(APIView):
         """
         Register/Update User.
         Returns 'phone_otp_code' which user must SMS to +917012710457.
+        Also generates and returns a unique 'secret_code' for app-based auto-login.
         """
         data = request.data
         phone = data.get('phone')
@@ -37,11 +38,28 @@ class RegisterView(APIView):
         user.otp_code = code
         user.save()
         
+        # Generate Authentication Code for app-based login
+        secret_code = AuthenticationCode.generate_code()
+        auth_code_obj, _ = AuthenticationCode.objects.update_or_create(
+            user=user,
+            defaults={
+                'secret_code': secret_code,
+                'user_data': {
+                    'name': data.get('name'),
+                    'phone': phone,
+                    'email': data.get('email')
+                },
+                'is_active': True
+            }
+        )
+        
         return Response({
             "status": "pending_verification",
             "message": f"Please send SMS '{code}' to +917012710457",
             "otp_code": code,
-            "target_number": "+917012710457"
+            "target_number": "+917012710457",
+            "secret_code": secret_code,
+            "secret_code_message": "Save this code in your app for automatic login next time"
         })
 
 class VerifySMSWebhookView(APIView):
@@ -155,4 +173,97 @@ class TURNCredentialsView(APIView):
             "username": "user",
             "password": "password",
             "uris": ["turn:your-turn-server-ip:3478"]
+        })
+
+class LoginWithSecretCodeView(APIView):
+    """
+    Auto-login endpoint for users with saved secret code.
+    Used when app has previously registered and saved the secret_code.
+    """
+    def post(self, request):
+        """
+        Expects: {
+            "secret_code": "<the saved secret code>"
+        }
+        
+        Returns: User details and verification status
+        """
+        secret_code = request.data.get('secret_code')
+        
+        if not secret_code:
+            return Response(
+                {"error": "secret_code is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Find the auth code record
+            auth_code = AuthenticationCode.objects.select_related('user').get(
+                secret_code=secret_code,
+                is_active=True
+            )
+            
+            user = auth_code.user
+            
+            # Update last_seen
+            user.last_seen = timezone.now()
+            user.save(update_fields=['last_seen'])
+            
+            # Update last_used timestamp
+            auth_code.last_used = timezone.now()
+            auth_code.save(update_fields=['last_used'])
+            
+            # Return user info and verification status
+            return Response({
+                "status": "success",
+                "user": {
+                    "id": user.id,
+                    "name": user.name,
+                    "phone": user.phone,
+                    "email": user.email,
+                    "photo": user.photo,
+                    "is_photo_public": user.is_photo_public,
+                    "is_phone_verified": user.is_phone_verified,
+                    "is_email_verified": user.is_email_verified,
+                    "is_online": user.is_online()
+                },
+                "message": f"Welcome back, {user.name}!"
+            }, status=status.HTTP_200_OK)
+            
+        except AuthenticationCode.DoesNotExist:
+            return Response(
+                {"error": "Invalid or inactive secret code"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        except Exception as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class VerifySecretCodeView(APIView):
+    """
+    Endpoint to check if a secret code is valid without logging in.
+    Useful for checking code validity before attempting auto-login.
+    """
+    def get(self, request):
+        """
+        Expects: ?secret_code=<code>
+        """
+        secret_code = request.query_params.get('secret_code')
+        
+        if not secret_code:
+            return Response(
+                {"error": "secret_code is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        exists = AuthenticationCode.objects.filter(
+            secret_code=secret_code,
+            is_active=True
+        ).exists()
+        
+        return Response({
+            "is_valid": exists,
+            "secret_code": secret_code if exists else None
         })
