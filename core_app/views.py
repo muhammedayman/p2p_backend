@@ -33,7 +33,9 @@ class RegisterView(APIView):
         
         # Generate Phone OTP (Code to be sent via SMS)
         code = str(random.randint(1000, 9999))
-        PhoneOTP.objects.create(phone=phone, otp_code=code, user=user)
+        user, created = PhoneOTP.objects.update_or_create(phone=phone,user=user)
+        user.otp_code = code
+        user.save()
         
         return Response({
             "status": "pending_verification",
