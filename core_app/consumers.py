@@ -1,5 +1,9 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.db import database_sync_to_async
+from django.utils import timezone
+from .models import ProfileUser
+import datetime
 
 class SignalingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -13,6 +17,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+        await self.update_user_status(online=True)
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -21,6 +26,16 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
+        await self.update_user_status(online=False)
+
+    @database_sync_to_async
+    def update_user_status(self, online=True):
+        if online:
+            ProfileUser.objects.filter(phone=self.user_id).update(last_seen=timezone.now())
+        else:
+            # Set to past to remove from online list immediately
+            past = timezone.now() - datetime.timedelta(minutes=10)
+            ProfileUser.objects.filter(phone=self.user_id).update(last_seen=past)
 
     # Receive message from WebSocket
     async def receive(self, text_data):
