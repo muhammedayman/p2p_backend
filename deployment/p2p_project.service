@@ -5,8 +5,8 @@ After=network.target
 [Service]
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/project1/backend_server
-ExecStart=/home/ubuntu/project1/venv/bin/daphne -b 0.0.0.0 -p 8000 p2p_project.asgi:application
+WorkingDirectory=/home/ubuntu/deploy/apps/p2p_backend
+ExecStart=/home/ubuntu/deploy/apps/donikkah/donikkahenv/bin/daphne -b 0.0.0.0 -p 9000 p2p_project.asgi:application
 Restart=always
 
 [Install]
