@@ -37,14 +37,14 @@ class UserDetailSerializer(serializers.ModelSerializer):
 class PeerSerializer(serializers.ModelSerializer):
     """
     Serializer for Discovery. 
-    STRIPS sensitive info (phone, email).
+    Includes phone for P2P signaling routing.
     HANDLES Photo privacy logic.
     """
     photo_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ProfileUser
-        fields = ['id', 'name', 'ip', 'port', 'photo_url']
+        fields = ['id', 'phone', 'name', 'ip', 'port', 'photo_url']
     
     def get_photo_url(self, obj):
         if obj.is_photo_public:
