@@ -45,16 +45,32 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         type = data.get('type') # 'offer', 'answer', 'ice-candidate'
 
         if target_id:
-            # Forward message to target user
-            await self.channel_layer.group_send(
-                f'user_{target_id}',
-                {
-                    'type': 'signaling_message',
-                    'sender': self.user_id,
-                    'msg_type': type,
-                    'payload': payload
-                }
-            )
+            # Resolve target ID to Phone Number (Group Name)
+            target_phone = await self.get_target_phone(target_id)
+            if target_phone:
+                # Forward message to target user
+                await self.channel_layer.group_send(
+                    f'user_{target_phone}',
+                    {
+                        'type': 'signaling_message',
+                        'sender': self.user_id,
+                        'msg_type': type,
+                        'payload': payload
+                    }
+                )
+    
+    @database_sync_to_async
+    def get_target_phone(self, target_id):
+        try:
+            # Check if target_id is already a phone (legacy or direct)
+            if target_id.startswith('+') or target_id.isdigit():
+                 return target_id
+                 
+            # Assume it's a Database ID
+            user = ProfileUser.objects.get(id=target_id)
+            return user.phone
+        except (ProfileUser.DoesNotExist, ValueError):
+            return None
 
     # Receive message from room group
     async def signaling_message(self, event):

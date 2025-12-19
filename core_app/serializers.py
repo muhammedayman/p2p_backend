@@ -44,7 +44,7 @@ class PeerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProfileUser
-        fields = ['id', 'phone', 'name', 'ip', 'port', 'photo_url']
+        fields = ['id', 'name', 'ip', 'port', 'photo_url']
     
     def get_photo_url(self, obj):
         if obj.is_photo_public:
