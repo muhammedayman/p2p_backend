@@ -22,7 +22,8 @@ application = ProtocolTypeRouter({
 
 # --- DEBUG: Wrap application to log ASGI events ---
 import logging
-logger = logging.getLogger('django')
+# Use core_app logger because settings.py only routes this logger to server.logs
+logger = logging.getLogger('core_app')
 
 class ASGIDebugMiddleware:
     def __init__(self, app):
