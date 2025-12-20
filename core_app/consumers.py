@@ -61,7 +61,9 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                 target_ip = await self.get_user_ip(target_phone)
                 network_status = "[DIFFERENT NETWORK]"
                 is_same_network = False
-                if self.ip and target_ip and self.ip == target_ip:
+                
+                # Robust Network Check (Handles IPv6 Subnets)
+                if self.is_same_network_check(self.ip, target_ip):
                     network_status = "[SAME NETWORK]"
                     is_same_network = True
                 
@@ -115,3 +117,27 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             'is_same_network': event.get('is_same_network', False),
             'debug_ips': f"SenderIP={event.get('debug_sender_ip')} TargetIP={event.get('debug_target_ip')}"
         }))
+
+    def is_same_network_check(self, ip1, ip2):
+        if not ip1 or not ip2:
+            return False
+            
+        # Exact Match (IPv4 or Identical IPv6)
+        if ip1 == ip2:
+            return True
+            
+        # IPv6 Subnet Match (/64)
+        if ':' in ip1 and ':' in ip2:
+            try:
+                # 2409:4900:8fdc:bb70:78a0:6ff:fef1:4a89
+                # Compare first 4 blocks (64 bits)
+                parts1 = ip1.split(':')
+                parts2 = ip2.split(':')
+                if len(parts1) >= 4 and len(parts2) >= 4:
+                    prefix1 = parts1[:4]
+                    prefix2 = parts2[:4]
+                    return prefix1 == prefix2
+            except Exception:
+                pass
+                
+        return False
