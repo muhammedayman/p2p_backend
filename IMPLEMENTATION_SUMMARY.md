@@ -222,3 +222,5 @@ Two comprehensive guides have been created:
 - The code does not expire automatically (implement logout to clear)
 - User data is stored as JSON for potential offline-first scenarios
 - Both OTP and secret code are returned, allowing multiple auth methods
+
+ssh scp root@46.62.195.191:/etc/nginx/sites-available/nginx_p2p.conf .
