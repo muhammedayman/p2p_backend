@@ -57,11 +57,12 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data):
-        logger.info(f"received  target_id {target_id} payload {payload}")  # Log first 100 chars
         data = json.loads(text_data)
         target_id = data.get('target')
         payload = data.get('payload') 
         type = data.get('type') # 'offer', 'answer', 'ice-candidate'
+        
+        logger.info(f"received target_id={target_id} payload={str(payload)[:100]}")  # Log first 100 chars
 
         if target_id:
             # Resolve target ID to Phone Number (Group Name)
