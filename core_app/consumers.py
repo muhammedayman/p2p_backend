@@ -57,12 +57,15 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             if target_phone:
                 target_ip = await self.get_user_ip(target_phone)
                 network_status = "[DIFFERENT NETWORK]"
+                is_same_network = False
                 if self.ip and target_ip and self.ip == target_ip:
                     network_status = "[SAME NETWORK]"
+                    is_same_network = True
                 
                 logger.info(f"Signaling Message: Type={type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
             else:
                  logger.warning(f"Signaling failed: Target {target_id} not found. Sender={self.user_id}")
+                 is_same_network = False
 
             if target_phone:
                 # Forward message to target user
@@ -72,7 +75,8 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                         'type': 'signaling_message',
                         'sender': self.user_id,
                         'msg_type': type,
-                        'payload': payload
+                        'payload': payload,
+                        'is_same_network': is_same_network
                     }
                 )
     
@@ -102,5 +106,6 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'sender': event['sender'],
             'type': event['msg_type'],
-            'payload': event['payload']
+            'payload': event['payload'],
+            'is_same_network': event.get('is_same_network', False)
         }))
