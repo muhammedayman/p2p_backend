@@ -57,47 +57,60 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        target_id = data.get('target')
-        payload = data.get('payload') 
-        type = data.get('type') # 'offer', 'answer', 'ice-candidate'
-        
-        logger.info(f"received target_id={target_id} payload={str(payload)[:100]}")  # Log first 100 chars
-
-        if target_id:
-            # Resolve target ID to Phone Number (Group Name)
-            target_phone = await self.get_target_phone(target_id)
+        try:
+            logger.info(f"[RECEIVE] Method called - raw text_data type: {type(text_data)}")
+            logger.info(f"[RECEIVE] Raw text_data: {text_data[:200] if isinstance(text_data, str) else text_data}")
             
-            # --- Network Topology & Logging ---
-            if target_phone:
-                target_ip = await self.get_user_ip(target_phone)
-                network_status = "[DIFFERENT NETWORK]"
-                is_same_network = False
-                
-                # Robust Network Check (Handles IPv6 Subnets)
-                if self.is_same_network_check(self.ip, target_ip):
-                    network_status = "[SAME NETWORK]"
-                    is_same_network = True
-                
-                logger.info(f"Signaling Message: Type={type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
-            else:
-                 logger.warning(f"Signaling failed: Target {target_id} not found. Sender={self.user_id}")
-                 is_same_network = False
+            data = json.loads(text_data)
+            logger.info(f"[RECEIVE] JSON parsed successfully: {data}")
+            
+            target_id = data.get('target')
+            payload = data.get('payload') 
+            type = data.get('type') # 'offer', 'answer', 'ice-candidate'
+            
+            logger.info(f"[RECEIVE] received target_id={target_id} payload={str(payload)[:100] if payload else None}")
 
-            if target_phone:
-                # Forward message to target user
-                await self.channel_layer.group_send(
-                    f'user_{target_phone}',
-                    {
-                        'type': 'signaling_message',
-                        'sender': self.user_id,
-                        'msg_type': type,
-                        'payload': payload,
-                        'is_same_network': is_same_network,
-                        'debug_sender_ip': self.ip,
-                        'debug_target_ip': target_ip
-                    }
-                )
+            if target_id:
+                # Resolve target ID to Phone Number (Group Name)
+                target_phone = await self.get_target_phone(target_id)
+                
+                # --- Network Topology & Logging ---
+                if target_phone:
+                    target_ip = await self.get_user_ip(target_phone)
+                    network_status = "[DIFFERENT NETWORK]"
+                    is_same_network = False
+                    
+                    # Robust Network Check (Handles IPv6 Subnets)
+                    if self.is_same_network_check(self.ip, target_ip):
+                        network_status = "[SAME NETWORK]"
+                        is_same_network = True
+                    
+                    logger.info(f"Signaling Message: Type={type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
+                else:
+                     logger.warning(f"Signaling failed: Target {target_id} not found. Sender={self.user_id}")
+                     is_same_network = False
+
+                if target_phone:
+                    # Forward message to target user
+                    await self.channel_layer.group_send(
+                        f'user_{target_phone}',
+                        {
+                            'type': 'signaling_message',
+                            'sender': self.user_id,
+                            'msg_type': type,
+                            'payload': payload,
+                            'is_same_network': is_same_network,
+                            'debug_sender_ip': self.ip,
+                            'debug_target_ip': target_ip
+                        }
+                    )
+            else:
+                logger.warning(f"[RECEIVE] No target_id in message. Message data: {data}")
+                
+        except json.JSONDecodeError as e:
+            logger.error(f"[RECEIVE] JSON Decode Error: {str(e)} - Raw data: {text_data[:200]}")
+        except Exception as e:
+            logger.error(f"[RECEIVE] Unexpected error: {type(e).__name__}: {str(e)}", exc_info=True)
     
     @database_sync_to_async
     def get_target_phone(self, target_id):
