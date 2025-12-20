@@ -107,6 +107,8 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group
     async def signaling_message(self, event):
+        # Send message to WebSocket
+        await self.send(text_data=json.dumps({
             'sender': event['sender'],
             'type': event['msg_type'],
             'payload': event['payload'],
