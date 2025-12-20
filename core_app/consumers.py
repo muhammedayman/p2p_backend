@@ -79,7 +79,9 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                         'sender': self.user_id,
                         'msg_type': type,
                         'payload': payload,
-                        'is_same_network': is_same_network
+                        'is_same_network': is_same_network,
+                        'debug_sender_ip': self.ip,
+                        'debug_target_ip': target_ip
                     }
                 )
     
@@ -105,10 +107,9 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
     # Receive message from room group
     async def signaling_message(self, event):
-        # Send message to WebSocket
-        await self.send(text_data=json.dumps({
             'sender': event['sender'],
             'type': event['msg_type'],
             'payload': event['payload'],
-            'is_same_network': event.get('is_same_network', False)
+            'is_same_network': event.get('is_same_network', False),
+            'debug_ips': f"SenderIP={event.get('debug_sender_ip')} TargetIP={event.get('debug_target_ip')}"
         }))
