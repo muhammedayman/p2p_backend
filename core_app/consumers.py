@@ -4,12 +4,17 @@ from channels.db import database_sync_to_async
 from django.utils import timezone
 from .models import ProfileUser
 import datetime
+import logging
+from .utils import get_client_ip_from_scope
+
+logger = logging.getLogger(__name__)
 
 class SignalingConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         # user_id is passed in the URL route: ws/signal/<user_id>/
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.room_group_name = f'user_{self.user_id}'
+        self.ip = get_client_ip_from_scope(self.scope)
 
         # Join room group
         await self.channel_layer.group_add(
@@ -47,6 +52,18 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         if target_id:
             # Resolve target ID to Phone Number (Group Name)
             target_phone = await self.get_target_phone(target_id)
+            
+            # --- Network Topology & Logging ---
+            if target_phone:
+                target_ip = await self.get_user_ip(target_phone)
+                network_status = "[DIFFERENT NETWORK]"
+                if self.ip and target_ip and self.ip == target_ip:
+                    network_status = "[SAME NETWORK]"
+                
+                logger.info(f"Signaling Message: Type={type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
+            else:
+                 logger.warning(f"Signaling failed: Target {target_id} not found. Sender={self.user_id}")
+
             if target_phone:
                 # Forward message to target user
                 await self.channel_layer.group_send(
@@ -71,6 +88,13 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             return user.phone
         except (ProfileUser.DoesNotExist, ValueError):
             return None
+
+    @database_sync_to_async
+    def get_user_ip(self, phone):
+        try:
+             return ProfileUser.objects.get(phone=phone).ip
+        except ProfileUser.DoesNotExist:
+             return None
 
     # Receive message from room group
     async def signaling_message(self, event):

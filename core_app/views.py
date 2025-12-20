@@ -6,6 +6,7 @@ from .models import ProfileUser, PhoneOTP, EmailOTP, AuthenticationCode
 from .serializers import UserRegistrationSerializer, PeerSerializer
 import random
 import datetime
+from .utils import get_client_ip
 
 
 # --- AUTHENTICATION ---
@@ -139,7 +140,8 @@ class UserStatusView(APIView):
 class HeartbeatView(APIView):
     def post(self, request):
         phone = request.data.get('phone')
-        ip = request.data.get('ip')
+        # ip = request.data.get('ip') # Don't trust client IP
+        ip = get_client_ip(request)
         port = request.data.get('port')
         
         ProfileUser.objects.filter(phone=phone).update(
