@@ -90,11 +90,19 @@ class SignalingConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_target_phone(self, target_id):
         try:
-            # Check if target_id is already a phone (legacy or direct)
+            # 1. Try to find user by ID first (if it looks like an ID)
+            if str(target_id).isdigit():
+                try:
+                    user = ProfileUser.objects.get(id=int(target_id))
+                    return user.phone
+                except ProfileUser.DoesNotExist:
+                    pass
+
+            # 2. Check if target_id is already a phone (legacy or direct)
             if target_id.startswith('+') or target_id.isdigit():
                  return target_id
                  
-            # Assume it's a Database ID
+            # 3. Fallback: Assume it might be a specific database ID (string format?)
             user = ProfileUser.objects.get(id=target_id)
             return user.phone
         except (ProfileUser.DoesNotExist, ValueError):
