@@ -148,8 +148,6 @@ class HeartbeatView(APIView):
         ProfileUser.objects.filter(phone=phone).update(
             ip=ip, 
             port=port, 
-            ip=ip, 
-            port=port, 
             last_seen=timezone.now()
         )
         print(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") # VISIBLE CONSOLE LOG
