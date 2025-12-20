@@ -139,7 +139,9 @@ class UserStatusView(APIView):
 
 class HeartbeatView(APIView):
     def post(self, request):
-        print("--- HEARTBEAT V2 REQUEST RECEIVED ---") # VISIBLE CONSOLE LOG
+        # Using logger.info to ensure output is captured in logs
+        from .consumers import logger 
+        logger.info("--- HEARTBEAT V2 REQUEST RECEIVED ---") 
         phone = request.data.get('phone')
         # ip = request.data.get('ip') # Don't trust client IP
         ip = get_client_ip(request)
@@ -150,7 +152,9 @@ class HeartbeatView(APIView):
             port=port, 
             last_seen=timezone.now()
         )
-        print(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") # VISIBLE CONSOLE LOG
+            last_seen=timezone.now()
+        )
+        logger.info(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") 
         return Response({"status": "updated", "ip_detected": ip})
 
 class PeersListView(APIView):

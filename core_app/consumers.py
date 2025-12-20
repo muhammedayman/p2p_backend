@@ -16,6 +16,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         self.room_group_name = f'user_{self.user_id}'
         logger.info(f"--- WEBSOCKET CONNECT V2: User={self.user_id} ---") # VISIBLE LOG
         self.ip = get_client_ip_from_scope(self.scope)
+        logger.info(f"--- WEBSOCKET DETECTED IP: User={self.user_id} IP={self.ip} ---")
 
         # Join room group
         await self.channel_layer.group_add(
