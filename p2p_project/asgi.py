@@ -19,3 +19,38 @@ application = ProtocolTypeRouter({
         routing.websocket_urlpatterns
     ),
 })
+
+# --- DEBUG: Wrap application to log ASGI events ---
+import logging
+logger = logging.getLogger('django')
+
+class ASGIDebugMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'websocket':
+            logger.info(f"[ASGI DEBUG] Connection Attempt: Path={scope.get('path')} Client={scope.get('client')}")
+
+        async def wrapped_receive():
+            event = await receive()
+            if scope['type'] == 'websocket':
+                if event['type'] == 'websocket.connect':
+                    logger.info(f"[ASGI DEBUG] Received CONNECT")
+                elif event['type'] == 'websocket.receive':
+                    logger.info(f"[ASGI DEBUG] Received DATA: {event.get('text', '')[:50]}...")
+                elif event['type'] == 'websocket.disconnect':
+                    logger.info(f"[ASGI DEBUG] Received DISCONNECT: {event}")
+            return event
+
+        async def wrapped_send(event):
+            if scope['type'] == 'websocket':
+                 if event['type'] == 'websocket.accept':
+                     logger.info(f"[ASGI DEBUG] Sending ACCEPT")
+                 elif event['type'] == 'websocket.close':
+                     logger.info(f"[ASGI DEBUG] Sending CLOSE")
+            await send(event)
+
+        await self.app(scope, wrapped_receive, wrapped_send)
+
+application = ASGIDebugMiddleware(application)

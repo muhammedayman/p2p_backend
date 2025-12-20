@@ -7,7 +7,7 @@ User=ubuntu
 Group=www-data
 WorkingDirectory=/home/ubuntu/deploy/apps/p2p_backend
 Environment=DJANGO_SETTINGS_MODULE=p2p_project.settings
-ExecStart=/home/ubuntu/deploy/apps/donikkah/donikkahenv/bin/daphne -b 0.0.0.0 -p 9000 p2p_project.asgi:application
+ExecStart=/home/ubuntu/deploy/apps/donikkah/donikkahenv/bin/daphne -v 2 -b 0.0.0.0 -p 9000 p2p_project.asgi:application
 Restart=always
 RestartSec=5
 
