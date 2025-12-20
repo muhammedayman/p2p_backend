@@ -24,6 +24,13 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
         await self.update_user_status(online=True, ip=self.ip)
         await self.accept()
+        
+        # Send Version/Debug Info on Connect
+        await self.send(text_data=json.dumps({
+            "type": "welcome",
+            "version": "SERVER_FIXED_V2",
+            "ip_detected": self.ip
+        }))
 
     async def disconnect(self, close_code):
         # Leave room group
