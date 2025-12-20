@@ -153,7 +153,7 @@ class HeartbeatView(APIView):
             last_seen=timezone.now()
         )
         logger.info(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") 
-        return Response({"status": "updated", "ip_detected": ip})
+        return Response({"status": "updated", "ip_detected": ip , "port": port,"phone":phone})
 
 class PeersListView(APIView):
     def get(self, request):
