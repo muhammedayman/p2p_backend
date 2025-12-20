@@ -152,8 +152,6 @@ class HeartbeatView(APIView):
             port=port, 
             last_seen=timezone.now()
         )
-            last_seen=timezone.now()
-        )
         logger.info(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") 
         return Response({"status": "updated", "ip_detected": ip})
 
