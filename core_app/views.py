@@ -139,6 +139,7 @@ class UserStatusView(APIView):
 
 class HeartbeatView(APIView):
     def post(self, request):
+        print("--- HEARTBEAT V2 REQUEST RECEIVED ---") # VISIBLE CONSOLE LOG
         phone = request.data.get('phone')
         # ip = request.data.get('ip') # Don't trust client IP
         ip = get_client_ip(request)
@@ -147,8 +148,11 @@ class HeartbeatView(APIView):
         ProfileUser.objects.filter(phone=phone).update(
             ip=ip, 
             port=port, 
+            ip=ip, 
+            port=port, 
             last_seen=timezone.now()
         )
+        print(f"--- HEARTBEAT V2: Phone={phone} IP={ip} ---") # VISIBLE CONSOLE LOG
         return Response({"status": "updated", "ip_detected": ip})
 
 class PeersListView(APIView):

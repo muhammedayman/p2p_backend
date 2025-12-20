@@ -14,6 +14,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         # user_id is passed in the URL route: ws/signal/<user_id>/
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.room_group_name = f'user_{self.user_id}'
+        logger.info(f"--- WEBSOCKET CONNECT V2: User={self.user_id} ---") # VISIBLE LOG
         self.ip = get_client_ip_from_scope(self.scope)
 
         # Join room group
