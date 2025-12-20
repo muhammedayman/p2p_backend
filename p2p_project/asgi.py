@@ -48,10 +48,16 @@ class ASGIDebugMiddleware:
             if scope['type'] == 'websocket':
                  if event['type'] == 'websocket.accept':
                      logger.info(f"[ASGI DEBUG] Sending ACCEPT")
+                 elif event['type'] == 'websocket.send':
+                     logger.info(f"[ASGI DEBUG] Sending DATA: {event.get('text', '')[:50]}")
                  elif event['type'] == 'websocket.close':
-                     logger.info(f"[ASGI DEBUG] Sending CLOSE")
+                     logger.info(f"[ASGI DEBUG] Sending CLOSE: {event}")
             await send(event)
 
-        await self.app(scope, wrapped_receive, wrapped_send)
+        try:
+            await self.app(scope, wrapped_receive, wrapped_send)
+        except Exception as e:
+            logger.error(f"[ASGI DEBUG] APPLICATION CRASHED: {e}", exc_info=True)
+            raise e
 
 application = ASGIDebugMiddleware(application)
