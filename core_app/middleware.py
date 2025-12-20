@@ -31,22 +31,10 @@ class RequestLoggingMiddleware:
 
     def log_request(self, request, body):
         headers = dict(request.headers)
-        log_data = {
-            "type": "REQUEST",
-            "method": request.method,
-            "path": request.get_full_path(),
-            "params": dict(request.GET),
-            "headers": headers,
-            "body": body,
-        }
-        logger.info(json.dumps(log_data))
+        log_data = f'REQUEST:{request.method} {request.get_full_path()} {request.GET}  Body: {body} Headers: {headers}\n'
+        
+        logger.info(log_data)
 
     def log_response(self, request, response, duration):
-        log_data = {
-            "type": "RESPONSE",
-            "method": request.method,
-            "path": request.get_full_path(),
-            "status_code": response.status_code,
-            "duration_seconds": duration,
-        }
-        logger.info(json.dumps(log_data))
+        log_data = f'RESPONSE: {request.method} {request.get_full_path()} {response.content} {response.status_code} Duration: {duration:.2f}s \n'
+        logger.info(log_data)
