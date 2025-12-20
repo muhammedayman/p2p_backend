@@ -73,7 +73,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             
             target_id = data.get('target')
             payload = data.get('payload') 
-            type = data.get('type') # 'offer', 'answer', 'ice-candidate'
+            msg_type = data.get('type') # 'offer', 'answer', 'ice-candidate'
             
             logger.info(f"[RECEIVE] received target_id={target_id} payload={str(payload)[:100] if payload else None}")
 
@@ -92,7 +92,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                         network_status = "[SAME NETWORK]"
                         is_same_network = True
                     
-                    logger.info(f"Signaling Message: Type={type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
+                    logger.info(f"Signaling Message: Type={msg_type}, Sender={self.user_id} ({self.ip}) -> Target={target_phone} ({target_ip}) {network_status}")
                 else:
                      logger.warning(f"Signaling failed: Target {target_id} not found. Sender={self.user_id}")
                      is_same_network = False
@@ -104,7 +104,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                         {
                             'type': 'signaling_message',
                             'sender': self.user_id,
-                            'msg_type': type,
+                            'msg_type': msg_type,
                             'payload': payload,
                             'is_same_network': is_same_network,
                             'debug_sender_ip': self.ip,
