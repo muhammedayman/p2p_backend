@@ -31,7 +31,8 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             "type": "welcome",
             "version": "SERVER_FIXED_V2",
-            "ip_detected": self.ip
+            "ip_detected": self.ip,
+            "channel_name": self.channel_name
         }))
 
     async def disconnect(self, close_code):
@@ -56,6 +57,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive(self, text_data):
+        logger.info(f"received  target_id {target_id} payload {payload}")  # Log first 100 chars
         data = json.loads(text_data)
         target_id = data.get('target')
         payload = data.get('payload') 
