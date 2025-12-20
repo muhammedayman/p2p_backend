@@ -22,7 +22,7 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
-        await self.update_user_status(online=True)
+        await self.update_user_status(online=True, ip=self.ip)
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -34,9 +34,12 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         await self.update_user_status(online=False)
 
     @database_sync_to_async
-    def update_user_status(self, online=True):
+    def update_user_status(self, online=True, ip=None):
         if online:
-            ProfileUser.objects.filter(phone=self.user_id).update(last_seen=timezone.now())
+            update_fields = {'last_seen': timezone.now()}
+            if ip:
+                update_fields['ip'] = ip
+            ProfileUser.objects.filter(phone=self.user_id).update(**update_fields)
         else:
             # Set to past to remove from online list immediately
             past = timezone.now() - datetime.timedelta(minutes=10)
