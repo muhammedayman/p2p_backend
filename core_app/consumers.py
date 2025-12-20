@@ -14,9 +14,14 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         # user_id is passed in the URL route: ws/signal/<user_id>/
         self.user_id = self.scope['url_route']['kwargs']['user_id']
         self.room_group_name = f'user_{self.user_id}'
-        logger.info(f"--- WEBSOCKET CONNECT V2: User={self.user_id} ---") # VISIBLE LOG
+        logger.info(f"============================================")
+        logger.info(f"[WEBSOCKET] CONNECTION ATTEMPT")
+        logger.info(f"[WEBSOCKET] User={self.user_id}")
+        logger.info(f"[WEBSOCKET] Scope path: {self.scope.get('path')}")
+        logger.info(f"============================================")
+        
         self.ip = get_client_ip_from_scope(self.scope)
-        logger.info(f"--- WEBSOCKET DETECTED IP: User={self.user_id} IP={self.ip} ---")
+        logger.info(f"[WEBSOCKET] IP detected: {self.ip}")
 
         # Join room group
         await self.channel_layer.group_add(
@@ -26,6 +31,8 @@ class SignalingConsumer(AsyncWebsocketConsumer):
 
         await self.update_user_status(online=True, ip=self.ip)
         await self.accept()
+        
+        logger.info(f"[WEBSOCKET] ✓ CONNECTION ACCEPTED for user {self.user_id}")
         
         # Send Version/Debug Info on Connect
         await self.send(text_data=json.dumps({
