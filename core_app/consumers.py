@@ -162,6 +162,8 @@ class SignalingConsumer(AsyncWebsocketConsumer):
             'debug_ips': f"SenderIP={event.get('debug_sender_ip')} TargetIP={event.get('debug_target_ip')}"
         }))
 
+        return False
+
     def is_same_network_check(self, ip1, ip2):
         if not ip1 or not ip2:
             return False
@@ -169,14 +171,26 @@ class SignalingConsumer(AsyncWebsocketConsumer):
         # Exact Match (IPv4 or Identical IPv6)
         if ip1 == ip2:
             return True
-            
+        
+        # IPv4 Subnet Match (/24) - Classic Class C
+        if '.' in ip1 and '.' in ip2:
+            p1 = ip1.split('.')
+            p2 = ip2.split('.')
+            if len(p1) == 4 and len(p2) == 4:
+                # Compare first 3 octets (192.168.1.x)
+                return p1[:3] == p2[:3]
+
         # IPv6 Subnet Match (/64)
         if ':' in ip1 and ':' in ip2:
             try:
                 # 2409:4900:8fdc:bb70:78a0:6ff:fef1:4a89
-                # Compare first 4 blocks (64 bits)
+                # Compare first 4 blocks (64 bits) which is standard ISP prefix for home
                 parts1 = ip1.split(':')
                 parts2 = ip2.split(':')
+                
+                # Filter out empty strings from double colons (::) expansion if needed
+                # But for standard full IPs, split works. 
+                # Let's just compare the first 3 major blocks to be safe for /48 corporate or /64 home
                 if len(parts1) >= 4 and len(parts2) >= 4:
                     prefix1 = parts1[:4]
                     prefix2 = parts2[:4]
