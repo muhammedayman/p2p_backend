@@ -164,7 +164,7 @@ class PeersListView(APIView):
         my_phone = request.query_params.get('phone')
         
         queryset = ProfileUser.objects.filter(last_seen__gt=cutoff)
-        if my_phone:
+        if my_phone and request.query_params.get('include_self') != 'true':
             queryset = queryset.exclude(phone=my_phone)
             
         # Serialize (Handles masking of phone/email)

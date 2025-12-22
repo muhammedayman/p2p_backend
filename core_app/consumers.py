@@ -83,6 +83,10 @@ class SignalingConsumer(AsyncWebsocketConsumer):
                 
                 # --- Network Topology & Logging ---
                 if target_phone:
+                    # Enforce DB consistency: Make sure Sender's IP in DB matches this active WS connection
+                    # This fixes issues where HTTP Heartbeat (Mobile Data) overwrites WS IP (WiFi)
+                    await self.update_user_status(online=True, ip=self.ip)
+
                     target_ip = await self.get_user_ip(target_phone)
                     network_status = "[DIFFERENT NETWORK]"
                     is_same_network = False

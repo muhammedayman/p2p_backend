@@ -495,3 +495,4 @@ This implementation provides:
 
 start "Android Terminal" cmd /k pushd d:\projects\research\project1\android_app
 start "" "C:\Program Files\Android\Android Studio\bin\studio64.exe" d:\projects\research\project1\android_app
+
