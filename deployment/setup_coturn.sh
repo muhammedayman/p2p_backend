@@ -15,7 +15,7 @@ listening-port=3478
 tls-listening-port=5349
 fingerprint
 lt-cred-mech
-user=myuser:mypassword
+user=myuser:SecureP2PStrongPass2025!^**
 realm=p2papp
 total-quota=100
 stale-nonce=600
