@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+# Clear usage of any weird characters by using quoted delimiter
 echo "--- Installing Coturn TURN Server ---"
 sudo apt-get update
 sudo apt-get install -y coturn
@@ -9,8 +10,8 @@ echo "--- Configuring /etc/turnserver.conf ---"
 # Backup existing config
 sudo mv /etc/turnserver.conf /etc/turnserver.conf.bak 2>/dev/null || true
 
-# Write new config
-sudo tee /etc/turnserver.conf <<EOF
+# Write new config using quoted heredoc to prevent expansion issues
+sudo tee /etc/turnserver.conf <<'EOF'
 listening-port=3478
 tls-listening-port=5349
 fingerprint
@@ -35,4 +36,4 @@ sudo systemctl restart coturn
 sudo systemctl enable coturn
 
 echo "✅ Coturn Installed & Running!"
-echo "Credentials: myuser / mypassword"
+echo "Credentials: myuser / SecureP2PStrongPass2025!^**"
