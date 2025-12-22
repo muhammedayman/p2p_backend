@@ -157,13 +157,19 @@ class HeartbeatView(APIView):
 
 class PeersListView(APIView):
     def get(self, request):
-        # Filter: Online (last 2 mins)
-        cutoff = timezone.now() - datetime.timedelta(minutes=2)
+        # Filter: Online (last 10 mins) - Increased for flaky mobile nets
+        cutoff = timezone.now() - datetime.timedelta(minutes=10)
         
         # Exclude self (optional, if phone param passed)
         my_phone = request.query_params.get('phone')
         
         queryset = ProfileUser.objects.filter(last_seen__gt=cutoff)
+        
+        # Debug Log
+        from .consumers import logger
+        total_online = queryset.count()
+        logger.info(f"PeersList Check: Requester={my_phone}, TotalOnline={total_online}")
+
         if my_phone and request.query_params.get('include_self') != 'true':
             queryset = queryset.exclude(phone=my_phone)
             
