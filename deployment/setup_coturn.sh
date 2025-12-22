@@ -25,6 +25,7 @@ external-ip=46.62.195.191
 # Restrict ports to make Firewalling easier
 min-port=60000
 max-port=60200
+EOF
 
 echo "--- Enabling Service ---"
 sudo sed -i 's/#TURNSERVER_ENABLED=1/TURNSERVER_ENABLED=1/' /etc/default/coturn
